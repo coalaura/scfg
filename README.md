@@ -2,6 +2,8 @@
 
 Fast ssh config and known_hosts parser.
 
+### Usage
+
 ```go
 package main
 
@@ -40,4 +42,28 @@ func main() {
 		}
 	}
 }
+```
+
+### Benchmarks
+
+```
+$ go test -v -bench BenchmarkConfig
+goos: linux
+goarch: amd64
+pkg: github.com/coalaura/scfg
+cpu: AMD Ryzen 7 7840U w/ Radeon(TM) 780M Graphics
+BenchmarkConfig
+BenchmarkConfig-16    	   55056	     26263 ns/op
+PASS
+ok  	github.com/coalaura/scfg	1.451s
+
+$ go test -v -bench BenchmarkKnownHosts
+goos: linux
+goarch: amd64
+pkg: github.com/coalaura/scfg
+cpu: AMD Ryzen 7 7840U w/ Radeon(TM) 780M Graphics
+BenchmarkKnownHosts
+BenchmarkKnownHosts-16    	  107126	     11252 ns/op
+PASS
+ok  	github.com/coalaura/scfg	1.208s
 ```
