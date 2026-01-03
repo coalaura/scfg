@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-func ReadLines(path string) (iter.Seq[[]byte], error) {
+func readLines(path string) (iter.Seq[[]byte], error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -30,7 +30,7 @@ func ReadLines(path string) (iter.Seq[[]byte], error) {
 
 			hash := bytes.Index(line, []byte("#"))
 			if hash != -1 {
-				line = TrimEnd(line[:hash])
+				line = trimEnd(line[:hash])
 
 				if len(line) == 0 {
 					continue
@@ -44,7 +44,7 @@ func ReadLines(path string) (iter.Seq[[]byte], error) {
 	}, nil
 }
 
-func NextSpace(b []byte) (int, int) {
+func nextSpace(b []byte) (int, int) {
 	var (
 		started bool
 		start   int
@@ -71,10 +71,10 @@ func NextSpace(b []byte) (int, int) {
 	return start, end
 }
 
-func TrimEnd(b []byte) []byte {
+func trimEnd(b []byte) []byte {
 	return bytes.TrimRight(b, " \t\r")
 }
 
-func TrimStart(b []byte) []byte {
+func trimStart(b []byte) []byte {
 	return bytes.TrimLeft(b, " \t")
 }

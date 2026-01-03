@@ -17,7 +17,7 @@ func ParseKnownHosts(home string) (KnownHosts, error) {
 
 	path := filepath.Join(home, ".ssh", "known_hosts")
 
-	lines, err := ReadLines(path)
+	lines, err := readLines(path)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return hosts, nil
@@ -27,7 +27,7 @@ func ParseKnownHosts(home string) (KnownHosts, error) {
 	}
 
 	for line := range lines {
-		start, end := NextSpace(line)
+		start, end := nextSpace(line)
 		if start == -1 {
 			continue
 		}
@@ -35,13 +35,13 @@ func ParseKnownHosts(home string) (KnownHosts, error) {
 		host := line[:start]
 		line = line[end+1:]
 
-		start, end = NextSpace(line)
+		start, end = nextSpace(line)
 		if start == -1 {
 			continue
 		}
 
 		typ := line[:start]
-		line = TrimEnd(line[end+1:])
+		line = trimEnd(line[end+1:])
 
 		if len(line) == 0 {
 			continue
