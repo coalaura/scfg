@@ -8,10 +8,13 @@ import (
 )
 
 type Server struct {
-	HostName     string
-	User         string
-	Port         string
-	IdentityFile string
+	HostName       string
+	User           string
+	Port           string
+	ProxyJump      string
+	IdentityFile   string
+	ForwardAgent   string
+	ConnectTimeout string
 }
 
 type Config map[string]*Server
@@ -65,22 +68,40 @@ func ParseConfig(home string) (Config, error) {
 			}
 
 			key := line[:start]
+			ln := len(key)
 
-			if len(key) < 4 || len(key) > 12 {
+			if ln < 4 || ln > 14 {
 				// not our concern
 				continue
 			}
 
-			value := TrimEnd(line[end+1:])
-
-			if bytes.EqualFold(key, []byte("hostname")) {
-				entry.HostName = string(value)
-			} else if bytes.EqualFold(key, []byte("user")) {
-				entry.User = string(value)
-			} else if bytes.EqualFold(key, []byte("port")) {
-				entry.Port = string(value)
-			} else if bytes.EqualFold(key, []byte("identityfile")) {
-				entry.IdentityFile = string(value)
+			switch key[0] | 0x20 {
+			case 'h':
+				if ln == 8 && bytes.EqualFold(key, []byte("hostname")) {
+					entry.HostName = string(TrimEnd(line[end+1:]))
+				}
+			case 'u':
+				if ln == 4 && bytes.EqualFold(key, []byte("user")) {
+					entry.User = string(TrimEnd(line[end+1:]))
+				}
+			case 'p':
+				if ln == 4 && bytes.EqualFold(key, []byte("port")) {
+					entry.Port = string(TrimEnd(line[end+1:]))
+				} else if ln == 9 && bytes.EqualFold(key, []byte("proxyjump")) {
+					entry.ProxyJump = string(TrimEnd(line[end+1:]))
+				}
+			case 'i':
+				if ln == 12 && bytes.EqualFold(key, []byte("identityfile")) {
+					entry.IdentityFile = string(TrimEnd(line[end+1:]))
+				}
+			case 'f':
+				if ln == 12 && bytes.EqualFold(key, []byte("forwardagent")) {
+					entry.ForwardAgent = string(TrimEnd(line[end+1:]))
+				}
+			case 'c':
+				if ln == 14 && bytes.EqualFold(key, []byte("connecttimeout")) {
+					entry.ConnectTimeout = string(TrimEnd(line[end+1:]))
+				}
 			}
 		}
 	}
