@@ -1,6 +1,10 @@
 package scfg
 
-import "net"
+import (
+	"net"
+	"strconv"
+	"time"
+)
 
 type Server struct {
 	HostName       string
@@ -30,4 +34,18 @@ func (s *Server) DefaultPort() string {
 
 func (s *Server) Addr() string {
 	return net.JoinHostPort(s.HostName, s.DefaultPort())
+}
+
+func (s *Server) Timeout(fallback time.Duration) time.Duration {
+	dur, err := time.ParseDuration(s.ConnectTimeout)
+	if err == nil {
+		return dur
+	}
+
+	num, err := strconv.ParseInt(s.ConnectTimeout, 10, 64)
+	if err == nil {
+		return time.Duration(num) * time.Second
+	}
+
+	return fallback
 }
