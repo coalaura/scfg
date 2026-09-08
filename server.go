@@ -12,6 +12,8 @@ type Server struct {
 	Port           string
 	ProxyJump      string
 	IdentityFile   string
+	IdentityFiles  []string
+	IdentitiesOnly string
 	ForwardAgent   string
 	ConnectTimeout string
 }
@@ -21,7 +23,7 @@ func (s *Server) DefaultUser() string {
 		return s.User
 	}
 
-	return "root"
+	return ""
 }
 
 func (s *Server) DefaultPort() string {

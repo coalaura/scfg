@@ -1,6 +1,6 @@
 # scfg
 
-Fast ssh config and known_hosts parser.
+Fast OpenSSH config resolver and known_hosts verifier.
 
 ### Usage
 
@@ -12,6 +12,7 @@ import (
 	"os"
 
 	"github.com/coalaura/scfg"
+	"golang.org/x/crypto/ssh"
 )
 
 func main() {
@@ -20,29 +21,28 @@ func main() {
 		panic(err)
 	}
 
-	config, err := scfg.ParseConfig(home)
+	config, err := scfg.ParseResolver(home)
 	if err != nil {
 		panic(err)
 	}
 
-	for name, server := range config {
-		fmt.Printf("%s: %v\n", name, server)
-	}
+	server := config.Resolve("example")
+	fmt.Printf("dial %s as %s\n", server.Addr(), server.DefaultUser())
 
-	hosts, err := scfg.ParseKnownHosts(home)
+	hosts, err := scfg.ParseHostKeyVerifier(home)
 	if err != nil {
 		panic(err)
 	}
 
-	for host, known := range hosts {
-		fmt.Printf("%s:\n", host)
-
-		for _, entry := range known {
-			fmt.Println(entry)
-		}
+	clientConfig := ssh.ClientConfig{
+		User:            server.DefaultUser(),
+		HostKeyCallback: hosts.HostKeyCallback(),
 	}
+	_ = clientConfig
 }
 ```
+
+`ParseConfig` remains available as a compatibility view of literal `Host` aliases. Use `ParseResolver` when wildcard, negated pattern, include, or default semantics matter. `ParseHostKeyVerifier` uses `x/crypto/ssh/knownhosts` and fails closed for missing, empty, unknown, mismatched, and revoked host keys.
 
 ### Benchmarks
 

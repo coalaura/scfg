@@ -1,80 +1,98 @@
 package scfg
 
 import (
-	"bytes"
-	"iter"
-	"os"
+	"fmt"
+	"strings"
 )
 
-func readLines(path string) (iter.Seq[[]byte], error) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
+func parseWords(line string) ([]string, error) {
+	words := make([]string, 0, 4)
 
-	return func(yield func([]byte) bool) {
-		var index int
-
-		for len(data) > 0 {
-			index = bytes.Index(data, []byte("\n"))
-			if index == -1 {
-				break
-			}
-
-			line := bytes.TrimSpace(data[:index])
-			data = data[index+1:]
-
-			if len(line) == 0 || line[0] == '#' {
-				continue
-			}
-
-			hash := bytes.Index(line, []byte("#"))
-			if hash != -1 {
-				line = trimEnd(line[:hash])
-
-				if len(line) == 0 {
-					continue
-				}
-			}
-
-			if !yield(line) {
-				return
-			}
-		}
-	}, nil
-}
-
-func nextSpace(b []byte) (int, int) {
 	var (
+		word    strings.Builder
+		quote   byte
+		escaped bool
 		started bool
-		start   int
-		end     int
 	)
 
-	for index, char := range b {
-		if char == ' ' || char == '\t' {
-			if !started {
-				started = true
-				start = index
+	flush := func() {
+		if !started {
+			return
+		}
+
+		words = append(words, word.String())
+
+		word.Reset()
+
+		started = false
+	}
+
+	for index := 0; index < len(line); index++ {
+		character := line[index]
+
+		if escaped {
+			word.WriteByte(character)
+
+			escaped = false
+			started = true
+
+			continue
+		}
+
+		if character == '\\' {
+			escaped = true
+			started = true
+
+			continue
+		}
+
+		if quote != 0 {
+			if character == quote {
+				quote = 0
+			} else {
+				word.WriteByte(character)
 			}
 
-			end = index
-		} else if started {
-			break
+			started = true
+
+			continue
+		}
+
+		switch character {
+		case '\'', '"':
+			quote = character
+			started = true
+		case '#':
+			flush()
+
+			return words, nil
+		case ' ', '\t', '\r':
+			flush()
+		case '=':
+			if len(words) == 0 && started {
+				flush()
+			} else if len(words) == 1 && !started {
+				continue
+			} else {
+				word.WriteByte(character)
+
+				started = true
+			}
+		default:
+			word.WriteByte(character)
+			started = true
 		}
 	}
 
-	if !started {
-		return -1, -1
+	if escaped {
+		return nil, fmt.Errorf("unfinished escape")
 	}
 
-	return start, end
-}
+	if quote != 0 {
+		return nil, fmt.Errorf("unterminated quote")
+	}
 
-func trimEnd(b []byte) []byte {
-	return bytes.TrimRight(b, " \t\r")
-}
+	flush()
 
-func trimStart(b []byte) []byte {
-	return bytes.TrimLeft(b, " \t")
+	return words, nil
 }
