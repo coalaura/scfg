@@ -31,6 +31,10 @@ func parseWords(line string) ([]string, error) {
 		character := line[index]
 
 		if escaped {
+			if !isEscapable(character) {
+				word.WriteByte('\\')
+			}
+
 			word.WriteByte(character)
 
 			escaped = false
@@ -95,4 +99,13 @@ func parseWords(line string) ([]string, error) {
 	flush()
 
 	return words, nil
+}
+
+func isEscapable(character byte) bool {
+	switch character {
+	case '\\', '\'', '"', '#', '=', ' ', '\t', '\r':
+		return true
+	default:
+		return false
+	}
 }

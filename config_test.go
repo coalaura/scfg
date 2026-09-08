@@ -193,6 +193,25 @@ func TestConfigFinalLineWithoutNewlineAndCompatibilityView(t *testing.T) {
 	}
 }
 
+func TestWindowsIdentityPathPreservesBackslashes(t *testing.T) {
+	home := t.TempDir()
+
+	windowsPath := `C:\Users\laura\.ssh\keys\ovh`
+	config := "Host windows\nIdentityFile " + windowsPath
+
+	writeTestFile(t, filepath.Join(home, ".ssh", "config"), config)
+
+	resolver, err := ParseResolver(home)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	server := resolver.Resolve("windows")
+	if len(server.IdentityFiles) != 1 || server.IdentityFiles[0] != windowsPath {
+		t.Fatalf("identity files = %q, want %q", server.IdentityFiles, windowsPath)
+	}
+}
+
 func TestMalformedConfigFails(t *testing.T) {
 	tests := []malformedConfigTest{
 		{name: "quote", config: "Host example\nUser \"unfinished"},
