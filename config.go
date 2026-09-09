@@ -40,8 +40,11 @@ type configParser struct {
 
 func (r *Resolver) Resolve(host string) *Server {
 	server := &Server{}
-	matchedIdentity := false
-	identityDisabled := false
+
+	var (
+		matchedIdentity  bool
+		identityDisabled bool
+	)
 
 	for blockIndex := range r.blocks {
 		block := &r.blocks[blockIndex]
@@ -379,10 +382,12 @@ func matchHostPattern(pattern, host string) bool {
 	pattern = strings.ToLower(pattern)
 	host = strings.ToLower(host)
 
-	patternIndex := 0
-	hostIndex := 0
-	starIndex := -1
-	retryIndex := 0
+	var (
+		patternIndex int
+		hostIndex    int
+		retryIndex   int
+		starIndex    = -1
+	)
 
 	for hostIndex < len(host) {
 		if patternIndex < len(pattern) && (pattern[patternIndex] == '?' || pattern[patternIndex] == host[hostIndex]) {
